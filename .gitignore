@@ -1,7 +1,90 @@
-venv/
-__pycache__/
+# Python
 *.pyc
 *.pyo
+__pycache__/
+*.pyd
+*.pyo
+
+# Virtual environment
+venv/
+env/
+ENV/
+.venv/
+.pyenv/
+
+# IDEs
 .idea/
 .vscode/
+*.code-workspace
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test, coverage, and logs
+*.log
+logs/
+.coverage
+htmlcov/
+.cache/
+.tox/
+.pytest_cache/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Redis dump files
+dump.rdb
+*.rdb
+
+# Local settings and dotenv files
 .env
+.env.*
+*.env
+*.envrc
+
+# Project data (if not needed in repo)
+data/*.json
+data/*.txt
+data/*.zip
+
+# For Mac/Linux backup files
+*~
+*.swp
+*.swo
+*.bak
+*.tmp
+
+# Node (если используешь для фронта)
+node_modules/
+
+# MyPy
+.mypy_cache/
+.dmypy.json
+
+# Other python/pip tools
+pip-log.txt
+pip-delete-this-directory.txt
+
+# pyright
+pyrightconfig.json
+
+# Sphinx documentation
+docs/_build/
+build/
+dist/
+
+# Wheel and egg info
+*.egg-info/
+*.egg
+
+# Coverage reports
+.coverage
+coverage.xml
+
+# Profile reports
+*.prof
+
+# SQLite DB
+*.sqlite3
+db.sqlite3
