@@ -23,19 +23,18 @@
 ## Структура проекта
 
 ```
-museum\_quiz\_bot/
-├── bot/
-│   ├── quiz\_bot.py         # Telegram-бот
-│   ├── vk\_quiz\_bot.py      # VK-бот
-│   └── redis\_tools.py      # Работа с Redis (общая для обоих ботов)
-├── data/
-│   └── \*dict.json          # Готовые файлы с вопросами и ответами (JSON)
-├── parse\_questions.py      # Парсинг txt-файлов с вопросами в структуру Python
-├── questions\_dict.py       # Генерация dict/json с вопросами/ответами для ботов
-├── .env.example            # Пример файла с переменными окружения
-├── requirements.txt        # Зависимости Python
-├── .gitignore              # Файлы и папки, игнорируемые git
-└── README.md               # Описание проекта (этот файл)
+├── bot
+│   ├── quiz_bot.py
+│   ├── vk_quiz_bot.py
+│   └── redis_tools.py
+├── data
+│   └── 120br_dict.json
+├── parse_questions.py
+├── questions_dict.py
+├── requirements.txt
+├── .env.example
+├── .gitignore
+└── README.md
 ```
 
 ---
