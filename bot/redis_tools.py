@@ -1,0 +1,23 @@
+import os
+import redis
+
+redis_client = None
+
+def get_redis_client():
+    global redis_client
+    if redis_client is None:
+        redis_client = redis.Redis(
+            host=os.environ['REDIS_HOST'],
+            port=int(os.environ['REDIS_PORT']),
+            password=os.environ['REDIS_PASSWORD'],
+            decode_responses=True,
+        )
+    return redis_client
+
+def save_user_question(user_id, question):
+    client = get_redis_client()
+    client.set(f"user:{user_id}:question", question)
+
+def get_user_question(user_id):
+    client = get_redis_client()
+    return client.get(f"user:{user_id}:question")

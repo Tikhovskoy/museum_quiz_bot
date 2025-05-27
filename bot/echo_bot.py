@@ -6,6 +6,8 @@ import json
 from telegram import Update, ReplyKeyboardMarkup, KeyboardButton
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
 
+from redis_tools import save_user_question, get_user_question
+
 QUESTIONS_PATH = os.path.join(os.path.dirname(__file__), '..', 'data', '120br_dict.json')
 
 def load_questions():
@@ -30,13 +32,19 @@ def start(update: Update, context: CallbackContext):
 def handle_message(update: Update, context: CallbackContext):
     global questions_dict
     user_message = update.message.text
+    user_id = update.effective_user.id
 
     if user_message == "Новый вопрос":
         question = random.choice(list(questions_dict.keys()))
-        context.user_data['current_question'] = question
+        save_user_question(user_id, question)
         update.message.reply_text(question)
     elif user_message == "Сдаться":
-        update.message.reply_text('Пока сдача не реализована')
+        current_question = get_user_question(user_id)
+        if current_question and current_question in questions_dict:
+            answer = questions_dict[current_question]
+            update.message.reply_text(f"Правильный ответ:\n{answer}")
+        else:
+            update.message.reply_text("Вы ещё не взяли ни одного вопроса.")
     elif user_message == "Мой счёт":
         update.message.reply_text('Пока счёт не реализован')
     else:
