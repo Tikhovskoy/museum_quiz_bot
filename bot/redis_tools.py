@@ -21,3 +21,12 @@ def save_user_question(user_id, question):
 def get_user_question(user_id):
     client = get_redis_client()
     return client.get(f"user:{user_id}:question")
+
+def increase_user_score(user_id):
+    client = get_redis_client()
+    return client.incr(f"user:{user_id}:score")
+
+def get_user_score(user_id):
+    client = get_redis_client()
+    score = client.get(f"user:{user_id}:score")
+    return int(score) if score else 0

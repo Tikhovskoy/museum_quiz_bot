@@ -10,7 +10,12 @@ from telegram import Update, ReplyKeyboardMarkup, KeyboardButton
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext, ConversationHandler
 from enum import Enum, auto
 
-from redis_tools import save_user_question, get_user_question
+from redis_tools import (
+    save_user_question,
+    get_user_question,
+    increase_user_score,
+    get_user_score
+)
 
 QUESTIONS_PATH = os.path.join(os.path.dirname(__file__), '..', 'data', '120br_dict.json')
 
@@ -62,6 +67,7 @@ def handle_solution_attempt(update: Update, context: CallbackContext):
     main_correct_answer = clean_answer(correct_answer)
 
     if user_answer == main_correct_answer:
+        increase_user_score(user_id)
         update.message.reply_text(
             "Правильно! Поздравляю! Для следующего вопроса нажми «Новый вопрос»"
         )
@@ -86,7 +92,9 @@ def handle_give_up(update: Update, context: CallbackContext):
     return States.ANSWER
 
 def handle_score(update: Update, context: CallbackContext):
-    update.message.reply_text('Пока счёт не реализован')
+    user_id = update.effective_user.id
+    score = get_user_score(user_id)
+    update.message.reply_text(f'Ваш счёт: {score}')
     return States.QUESTION
 
 def fallback(update: Update, context: CallbackContext):
