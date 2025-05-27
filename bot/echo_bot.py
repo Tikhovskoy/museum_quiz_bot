@@ -80,7 +80,10 @@ def handle_give_up(update: Update, context: CallbackContext):
         update.message.reply_text(f"Правильный ответ:\n{answer}")
     else:
         update.message.reply_text("Вы ещё не взяли ни одного вопроса.")
-    return States.QUESTION
+    question = random.choice(list(questions_dict.keys()))
+    save_user_question(user_id, question)
+    update.message.reply_text(question)
+    return States.ANSWER
 
 def handle_score(update: Update, context: CallbackContext):
     update.message.reply_text('Пока счёт не реализован')
