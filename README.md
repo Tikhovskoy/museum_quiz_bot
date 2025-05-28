@@ -32,7 +32,6 @@
 ├── parse_questions.py
 ├── questions_dict.py
 ├── requirements.txt
-├── .env.example
 ├── .gitignore
 └── README.md
 ```
