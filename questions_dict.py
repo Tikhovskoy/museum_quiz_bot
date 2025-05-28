@@ -1,35 +1,41 @@
-import os
-import json
 import argparse
+import json
+import os
+
 
 def build_questions_dict(filepath):
-    with open(filepath, encoding='koi8-r') as file:
+    with open(filepath, encoding="koi8-r") as file:
         lines = file.readlines()
 
     questions_dict = {}
-    question_text = ''
-    answer_text = ''
+    question_text = ""
+    answer_text = ""
     mode = None
 
     for line in lines:
-        line = line.rstrip('\r\n')
-        if line.startswith('Вопрос'):
-            mode = 'question'
-            question_text = ''
-            answer_text = ''
+        line = line.rstrip("\r\n")
+        if line.startswith("Вопрос"):
+            mode = "question"
+            question_text = ""
+            answer_text = ""
             continue
-        elif line.startswith('Ответ:'):
-            mode = 'answer'
+        elif line.startswith("Ответ:"):
+            mode = "answer"
             continue
-        elif line.startswith('Вопрос') or line.startswith('Комментарий:') or line.startswith('Источник:') or line.startswith('Автор:'):
+        elif (
+            line.startswith("Вопрос")
+            or line.startswith("Комментарий:")
+            or line.startswith("Источник:")
+            or line.startswith("Автор:")
+        ):
             mode = None
             continue
 
-        if mode == 'question':
+        if mode == "question":
             if question_text:
-                question_text += '\n'
+                question_text += "\n"
             question_text += line
-        elif mode == 'answer':
+        elif mode == "answer":
             if not answer_text and line.strip():
                 answer_text = line.strip()
                 if question_text and answer_text:
@@ -38,14 +44,15 @@ def build_questions_dict(filepath):
 
     return questions_dict
 
+
 def main():
     parser = argparse.ArgumentParser(
         description="Генерация dict и json с вопросами для викторины"
     )
     parser.add_argument(
-        '--file',
-        default=os.path.join(os.path.dirname(__file__), 'data', '120br.txt'),
-        help="Путь к текстовому файлу с вопросами"
+        "--file",
+        default=os.path.join(os.path.dirname(__file__), "data", "120br.txt"),
+        help="Путь к текстовому файлу с вопросами",
     )
     args = parser.parse_args()
 
@@ -62,13 +69,14 @@ def main():
         if i == 2:
             break
 
-    print(f'Всего вопросов: {len(questions_dict)}')
+    print(f"Всего вопросов: {len(questions_dict)}")
 
-    output_path = filepath.replace('.txt', '_dict.json')
-    with open(output_path, 'w', encoding='utf-8') as out:
+    output_path = filepath.replace(".txt", "_dict.json")
+    with open(output_path, "w", encoding="utf-8") as out:
         json.dump(questions_dict, out, ensure_ascii=False, indent=2)
 
-    print(f'Вопросы сохранены в {output_path}')
+    print(f"Вопросы сохранены в {output_path}")
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()

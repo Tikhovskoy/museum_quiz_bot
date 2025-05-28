@@ -1,14 +1,15 @@
+import argparse
 import os
 import re
-import argparse
+
 
 def parse_questions(filepath):
-    with open(filepath, encoding='koi8-r') as file:
+    with open(filepath, encoding="koi8-r") as file:
         content = file.read()
 
     question_pattern = re.compile(
-        r'Вопрос\s*(\d+):\n(.*?)\nОтвет:\n(.*?)\n(?:Комментарий:\n(.*?))?(?:\nИсточник:\n(.*?))?(?:\nАвтор:\n(.*?))?\n',
-        re.DOTALL
+        r"Вопрос\s*(\d+):\n(.*?)\nОтвет:\n(.*?)\n(?:Комментарий:\n(.*?))?(?:\nИсточник:\n(.*?))?(?:\nАвтор:\n(.*?))?\n",
+        re.DOTALL,
     )
 
     questions = []
@@ -20,25 +21,28 @@ def parse_questions(filepath):
         source = match.group(5).strip() if match.group(5) else ""
         author = match.group(6).strip() if match.group(6) else ""
 
-        questions.append({
-            'number': number,
-            'question': question,
-            'answer': answer,
-            'comment': comment,
-            'source': source,
-            'author': author,
-        })
+        questions.append(
+            {
+                "number": number,
+                "question": question,
+                "answer": answer,
+                "comment": comment,
+                "source": source,
+                "author": author,
+            }
+        )
 
     return questions
+
 
 def main():
     parser = argparse.ArgumentParser(
         description="Парсинг текстовых файлов с вопросами для викторины"
     )
     parser.add_argument(
-        '--file',
-        default=os.path.join(os.path.dirname(__file__), 'data', '120br.txt'),
-        help="Путь к текстовому файлу с вопросами"
+        "--file",
+        default=os.path.join(os.path.dirname(__file__), "data", "120br.txt"),
+        help="Путь к текстовому файлу с вопросами",
     )
     args = parser.parse_args()
 
@@ -59,5 +63,6 @@ def main():
 
     print(f"Всего вопросов: {len(questions)}")
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()

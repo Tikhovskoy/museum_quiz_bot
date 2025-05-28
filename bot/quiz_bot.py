@@ -1,45 +1,44 @@
+import json
 import logging
 import os
 import random
-import json
 import re
-
-from dotenv import load_dotenv
-
-from telegram import Update, ReplyKeyboardMarkup, KeyboardButton
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext, ConversationHandler
 from enum import Enum, auto
 
-from redis_tools import (
-    save_user_question,
-    get_user_question,
-    increase_user_score,
-    get_user_score
+from dotenv import load_dotenv
+from redis_tools import (get_user_question, get_user_score,
+                         increase_user_score, save_user_question)
+from telegram import KeyboardButton, ReplyKeyboardMarkup, Update
+from telegram.ext import (CallbackContext, CommandHandler, ConversationHandler,
+                          Filters, MessageHandler, Updater)
+
+QUESTIONS_PATH = os.path.join(
+    os.path.dirname(__file__), "..", "data", "120br_dict.json"
 )
 
-QUESTIONS_PATH = os.path.join(os.path.dirname(__file__), '..', 'data', '120br_dict.json')
 
 class States(Enum):
     QUESTION = auto()
     ANSWER = auto()
 
+
 def load_questions():
-    with open(QUESTIONS_PATH, encoding='utf-8') as f:
+    with open(QUESTIONS_PATH, encoding="utf-8") as f:
         return json.load(f)
+
 
 questions_dict = None
 
+
 def start(update: Update, context: CallbackContext):
     keyboard = [
-        [KeyboardButton('Новый вопрос'), KeyboardButton('Сдаться')],
-        [KeyboardButton('Мой счёт')]
+        [KeyboardButton("Новый вопрос"), KeyboardButton("Сдаться")],
+        [KeyboardButton("Мой счёт")],
     ]
     reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
-    update.message.reply_text(
-        'Привет! Я бот для викторин!',
-        reply_markup=reply_markup
-    )
+    update.message.reply_text("Привет! Я бот для викторин!", reply_markup=reply_markup)
     return States.QUESTION
+
 
 def handle_new_question_request(update: Update, context: CallbackContext):
     global questions_dict
@@ -49,18 +48,22 @@ def handle_new_question_request(update: Update, context: CallbackContext):
     update.message.reply_text(question)
     return States.ANSWER
 
+
 def clean_answer(answer):
-    answer = answer.split('.', 1)[0]
-    answer = re.split(r'[\(\[]', answer)[0]
+    answer = answer.split(".", 1)[0]
+    answer = re.split(r"[\(\[]", answer)[0]
     answer = answer.strip().lower()
     return answer
+
 
 def handle_solution_attempt(update: Update, context: CallbackContext):
     user_id = update.effective_user.id
     user_answer = update.message.text.strip().lower()
     current_question = get_user_question(user_id)
     if not current_question or current_question not in questions_dict:
-        update.message.reply_text("Пожалуйста, сначала возьмите вопрос — нажмите «Новый вопрос».")
+        update.message.reply_text(
+            "Пожалуйста, сначала возьмите вопрос — нажмите «Новый вопрос»."
+        )
         return States.QUESTION
 
     correct_answer = questions_dict[current_question]
@@ -73,10 +76,9 @@ def handle_solution_attempt(update: Update, context: CallbackContext):
         )
         return States.QUESTION
     else:
-        update.message.reply_text(
-            "Неправильно… Попробуешь ещё раз?"
-        )
+        update.message.reply_text("Неправильно… Попробуешь ещё раз?")
         return States.ANSWER
+
 
 def handle_give_up(update: Update, context: CallbackContext):
     user_id = update.effective_user.id
@@ -91,15 +93,20 @@ def handle_give_up(update: Update, context: CallbackContext):
     update.message.reply_text(question)
     return States.ANSWER
 
+
 def handle_score(update: Update, context: CallbackContext):
     user_id = update.effective_user.id
     score = get_user_score(user_id)
-    update.message.reply_text(f'Ваш счёт: {score}')
+    update.message.reply_text(f"Ваш счёт: {score}")
     return States.QUESTION
 
+
 def fallback(update: Update, context: CallbackContext):
-    update.message.reply_text('Пожалуйста, пользуйтесь кнопками или отвечайте на вопрос!')
+    update.message.reply_text(
+        "Пожалуйста, пользуйтесь кнопками или отвечайте на вопрос!"
+    )
     return States.QUESTION
+
 
 def main():
     load_dotenv()
@@ -110,25 +117,29 @@ def main():
     questions_dict = load_questions()
 
     logging.basicConfig(
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-        level=logging.INFO
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        level=logging.INFO,
     )
 
     updater = Updater(TELEGRAM_TOKEN, use_context=True)
     dp = updater.dispatcher
 
     conv_handler = ConversationHandler(
-        entry_points=[CommandHandler('start', start)],
+        entry_points=[CommandHandler("start", start)],
         states={
             States.QUESTION: [
-                MessageHandler(Filters.regex('^Новый вопрос$'), handle_new_question_request),
-                MessageHandler(Filters.regex('^Сдаться$'), handle_give_up),
-                MessageHandler(Filters.regex('^Мой счёт$'), handle_score),
+                MessageHandler(
+                    Filters.regex("^Новый вопрос$"), handle_new_question_request
+                ),
+                MessageHandler(Filters.regex("^Сдаться$"), handle_give_up),
+                MessageHandler(Filters.regex("^Мой счёт$"), handle_score),
             ],
             States.ANSWER: [
-                MessageHandler(Filters.regex('^Сдаться$'), handle_give_up),
-                MessageHandler(Filters.regex('^Мой счёт$'), handle_score),
-                MessageHandler(Filters.text & ~Filters.command, handle_solution_attempt),
+                MessageHandler(Filters.regex("^Сдаться$"), handle_give_up),
+                MessageHandler(Filters.regex("^Мой счёт$"), handle_score),
+                MessageHandler(
+                    Filters.text & ~Filters.command, handle_solution_attempt
+                ),
             ],
         },
         fallbacks=[MessageHandler(Filters.all, fallback)],
@@ -140,5 +151,6 @@ def main():
     updater.start_polling()
     updater.idle()
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()
