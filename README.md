@@ -169,3 +169,10 @@ python questions_dict.py --file data/120br.txt
 
 * **Платформенность:**
   Логика Telegram-бота и VK-бота максимально унифицирована.
+
+---
+
+## Пример ботов
+
+- [Telegram-бот Museum Quiz](https://t.me/QuickClockbot)
+- [VK-бот Museum Quiz (чат)](https://vk.com/im?sel=-230495233)
