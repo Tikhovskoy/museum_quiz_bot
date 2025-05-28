@@ -12,10 +12,6 @@ from telegram import KeyboardButton, ReplyKeyboardMarkup, Update
 from telegram.ext import (CallbackContext, CommandHandler, ConversationHandler,
                           Filters, MessageHandler, Updater)
 
-QUESTIONS_PATH = os.path.join(
-    os.path.dirname(__file__), "..", "data", "120br_dict.json"
-)
-
 PLATFORM = "telegram"
 
 
@@ -24,8 +20,8 @@ class States(Enum):
     ANSWER = auto()
 
 
-def load_questions():
-    with open(QUESTIONS_PATH, encoding="utf-8") as f:
+def load_questions(questions_path):
+    with open(questions_path, encoding="utf-8") as f:
         return json.load(f)
 
 
@@ -114,9 +110,13 @@ def main():
     load_dotenv()
 
     TELEGRAM_TOKEN = os.environ["TELEGRAM_TOKEN"]
+    questions_path = os.environ.get(
+        "QUESTIONS_PATH",
+        os.path.join(os.path.dirname(__file__), "..", "data", "120br_dict.json"),
+    )
 
     global questions_dict
-    questions_dict = load_questions()
+    questions_dict = load_questions(questions_path)
 
     logging.basicConfig(
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",

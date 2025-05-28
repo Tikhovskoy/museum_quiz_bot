@@ -11,15 +11,11 @@ from redis_tools import (get_user_question, get_user_score,
 from vk_api.bot_longpoll import VkBotEventType, VkBotLongPoll
 from vk_api.keyboard import VkKeyboard, VkKeyboardColor
 
-QUESTIONS_PATH = os.path.join(
-    os.path.dirname(__file__), "..", "data", "120br_dict.json"
-)
-
 PLATFORM = "vk"
 
 
-def load_questions():
-    with open(QUESTIONS_PATH, encoding="utf-8") as f:
+def load_questions(questions_path):
+    with open(questions_path, encoding="utf-8") as f:
         return json.load(f)
 
 
@@ -43,6 +39,10 @@ def main():
     load_dotenv()
     vk_token = os.environ["VK_GROUP_TOKEN"]
     vk_group_id = int(os.environ["VK_GROUP_ID"])
+    questions_path = os.environ.get(
+        "QUESTIONS_PATH",
+        os.path.join(os.path.dirname(__file__), "..", "data", "120br_dict.json"),
+    )
 
     logging.basicConfig(level=logging.INFO)
     logger = logging.getLogger("vk_quiz_bot")
@@ -52,7 +52,7 @@ def main():
     longpoll = VkBotLongPoll(vk_session, vk_group_id)
     keyboard = build_keyboard()
 
-    questions_dict = load_questions()
+    questions_dict = load_questions(questions_path)
     logger.info("VK Quiz Bot started!")
     print("Longpoll started, waiting for events...")
 
