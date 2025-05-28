@@ -16,6 +16,8 @@ QUESTIONS_PATH = os.path.join(
     os.path.dirname(__file__), "..", "data", "120br_dict.json"
 )
 
+PLATFORM = "telegram"
+
 
 class States(Enum):
     QUESTION = auto()
@@ -44,7 +46,7 @@ def handle_new_question_request(update: Update, context: CallbackContext):
     global questions_dict
     question = random.choice(list(questions_dict.keys()))
     user_id = update.effective_user.id
-    save_user_question(user_id, question)
+    save_user_question(user_id, question, PLATFORM)
     update.message.reply_text(question)
     return States.ANSWER
 
@@ -59,7 +61,7 @@ def clean_answer(answer):
 def handle_solution_attempt(update: Update, context: CallbackContext):
     user_id = update.effective_user.id
     user_answer = update.message.text.strip().lower()
-    current_question = get_user_question(user_id)
+    current_question = get_user_question(user_id, PLATFORM)
     if not current_question or current_question not in questions_dict:
         update.message.reply_text(
             "Пожалуйста, сначала возьмите вопрос — нажмите «Новый вопрос»."
@@ -70,7 +72,7 @@ def handle_solution_attempt(update: Update, context: CallbackContext):
     main_correct_answer = clean_answer(correct_answer)
 
     if user_answer == main_correct_answer:
-        increase_user_score(user_id)
+        increase_user_score(user_id, PLATFORM)
         update.message.reply_text(
             "Правильно! Поздравляю! Для следующего вопроса нажми «Новый вопрос»"
         )
@@ -82,21 +84,21 @@ def handle_solution_attempt(update: Update, context: CallbackContext):
 
 def handle_give_up(update: Update, context: CallbackContext):
     user_id = update.effective_user.id
-    current_question = get_user_question(user_id)
+    current_question = get_user_question(user_id, PLATFORM)
     if current_question and current_question in questions_dict:
         answer = questions_dict[current_question]
         update.message.reply_text(f"Правильный ответ:\n{answer}")
     else:
         update.message.reply_text("Вы ещё не взяли ни одного вопроса.")
     question = random.choice(list(questions_dict.keys()))
-    save_user_question(user_id, question)
+    save_user_question(user_id, question, PLATFORM)
     update.message.reply_text(question)
     return States.ANSWER
 
 
 def handle_score(update: Update, context: CallbackContext):
     user_id = update.effective_user.id
-    score = get_user_score(user_id)
+    score = get_user_score(user_id, PLATFORM)
     update.message.reply_text(f"Ваш счёт: {score}")
     return States.QUESTION
 
