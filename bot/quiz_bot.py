@@ -6,7 +6,7 @@ import re
 from enum import Enum, auto
 
 from dotenv import load_dotenv
-from redis_tools import (get_user_question, get_user_score,
+from redis_tools import (get_redis_client, get_user_question, get_user_score,
                          increase_user_score, save_user_question)
 from telegram import KeyboardButton, ReplyKeyboardMarkup, Update
 from telegram.ext import (CallbackContext, CommandHandler, ConversationHandler,
@@ -25,9 +25,6 @@ def load_questions(questions_path):
         return json.load(f)
 
 
-questions = None
-
-
 def start(update: Update, context: CallbackContext):
     keyboard = [
         [KeyboardButton("Новый вопрос"), KeyboardButton("Сдаться")],
@@ -39,10 +36,11 @@ def start(update: Update, context: CallbackContext):
 
 
 def handle_new_question_request(update: Update, context: CallbackContext):
-    global questions
+    questions = context.bot_data["questions"]
+    redis_client = context.bot_data["redis_client"]
     question = random.choice(list(questions.keys()))
     user_id = update.effective_user.id
-    save_user_question(user_id, question, PLATFORM)
+    save_user_question(redis_client, user_id, question, PLATFORM)
     update.message.reply_text(question)
     return States.ANSWER
 
@@ -55,9 +53,11 @@ def clean_answer(answer):
 
 
 def handle_solution_attempt(update: Update, context: CallbackContext):
+    questions = context.bot_data["questions"]
+    redis_client = context.bot_data["redis_client"]
     user_id = update.effective_user.id
     user_answer = update.message.text.strip().lower()
-    current_question = get_user_question(user_id, PLATFORM)
+    current_question = get_user_question(redis_client, user_id, PLATFORM)
     if not current_question or current_question not in questions:
         update.message.reply_text(
             "Пожалуйста, сначала возьмите вопрос — нажмите «Новый вопрос»."
@@ -68,7 +68,7 @@ def handle_solution_attempt(update: Update, context: CallbackContext):
     main_correct_answer = clean_answer(correct_answer)
 
     if user_answer == main_correct_answer:
-        increase_user_score(user_id, PLATFORM)
+        increase_user_score(redis_client, user_id, PLATFORM)
         update.message.reply_text(
             "Правильно! Поздравляю! Для следующего вопроса нажми «Новый вопрос»"
         )
@@ -79,22 +79,25 @@ def handle_solution_attempt(update: Update, context: CallbackContext):
 
 
 def handle_give_up(update: Update, context: CallbackContext):
+    questions = context.bot_data["questions"]
+    redis_client = context.bot_data["redis_client"]
     user_id = update.effective_user.id
-    current_question = get_user_question(user_id, PLATFORM)
+    current_question = get_user_question(redis_client, user_id, PLATFORM)
     if current_question and current_question in questions:
         answer = questions[current_question]
         update.message.reply_text(f"Правильный ответ:\n{answer}")
     else:
         update.message.reply_text("Вы ещё не взяли ни одного вопроса.")
     question = random.choice(list(questions.keys()))
-    save_user_question(user_id, question, PLATFORM)
+    save_user_question(redis_client, user_id, question, PLATFORM)
     update.message.reply_text(question)
     return States.ANSWER
 
 
 def handle_score(update: Update, context: CallbackContext):
+    redis_client = context.bot_data["redis_client"]
     user_id = update.effective_user.id
-    score = get_user_score(user_id, PLATFORM)
+    score = get_user_score(redis_client, user_id, PLATFORM)
     update.message.reply_text(f"Ваш счёт: {score}")
     return States.QUESTION
 
@@ -108,15 +111,14 @@ def fallback(update: Update, context: CallbackContext):
 
 def main():
     load_dotenv()
-
     TELEGRAM_TOKEN = os.environ["TELEGRAM_TOKEN"]
     questions_path = os.environ.get(
         "QUESTIONS_PATH",
         os.path.join(os.path.dirname(__file__), "..", "data", "120br_dict.json"),
     )
 
-    global questions
     questions = load_questions(questions_path)
+    redis_client = get_redis_client()
 
     logging.basicConfig(
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
@@ -125,6 +127,9 @@ def main():
 
     updater = Updater(TELEGRAM_TOKEN, use_context=True)
     dp = updater.dispatcher
+
+    dp.bot_data["questions"] = questions
+    dp.bot_data["redis_client"] = redis_client
 
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler("start", start)],
