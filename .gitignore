@@ -43,9 +43,6 @@ dump.rdb
 *.env
 *.envrc
 
-# Project data (if not needed in repo)
-data/
-
 # For Mac/Linux backup files
 *~
 *.swp
