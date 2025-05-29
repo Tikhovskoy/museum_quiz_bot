@@ -62,82 +62,90 @@ def main():
 
     for event in longpoll.listen():
         print("Catch event:", event)
-        if event.type == VkBotEventType.MESSAGE_NEW and event.from_user:
-            user_id = event.message.from_id
-            text = event.message.text.strip()
+        if event.type != VkBotEventType.MESSAGE_NEW or not event.from_user:
+            continue
 
-            if text == "Новый вопрос":
-                question = random.choice(list(questions.keys()))
-                save_user_question(redis_client, user_id, question, PLATFORM)
+        user_id = event.message.from_id
+        text = event.message.text.strip()
+
+        if text == "Новый вопрос":
+            question = random.choice(list(questions.keys()))
+            save_user_question(redis_client, user_id, question, PLATFORM)
+            vk.messages.send(
+                user_id=user_id,
+                random_id=vk_api.utils.get_random_id(),
+                message=question,
+                keyboard=keyboard.get_keyboard(),
+            )
+            print(f"Задан новый вопрос пользователю {user_id}")
+            continue
+
+        if text == "Сдаться":
+            current_question = get_user_question(redis_client, user_id, PLATFORM)
+            if current_question and current_question in questions:
+                answer = questions[current_question]
                 vk.messages.send(
                     user_id=user_id,
                     random_id=vk_api.utils.get_random_id(),
-                    message=question,
-                    keyboard=keyboard.get_keyboard(),
-                )
-                print(f"Задан новый вопрос пользователю {user_id}")
-            elif text == "Сдаться":
-                current_question = get_user_question(redis_client, user_id, PLATFORM)
-                if current_question and current_question in questions:
-                    answer = questions[current_question]
-                    vk.messages.send(
-                        user_id=user_id,
-                        random_id=vk_api.utils.get_random_id(),
-                        message=f"Правильный ответ:\n{answer}",
-                        keyboard=keyboard.get_keyboard(),
-                    )
-                else:
-                    vk.messages.send(
-                        user_id=user_id,
-                        random_id=vk_api.utils.get_random_id(),
-                        message="Вы ещё не взяли ни одного вопроса.",
-                        keyboard=keyboard.get_keyboard(),
-                    )
-                question = random.choice(list(questions.keys()))
-                save_user_question(redis_client, user_id, question, PLATFORM)
-                vk.messages.send(
-                    user_id=user_id,
-                    random_id=vk_api.utils.get_random_id(),
-                    message=question,
-                    keyboard=keyboard.get_keyboard(),
-                )
-                print(f"Пользователь {user_id} сдался, задан новый вопрос")
-            elif text == "Мой счёт":
-                score = get_user_score(redis_client, user_id, PLATFORM)
-                vk.messages.send(
-                    user_id=user_id,
-                    random_id=vk_api.utils.get_random_id(),
-                    message=f"Ваш счёт: {score}",
+                    message=f"Правильный ответ:\n{answer}",
                     keyboard=keyboard.get_keyboard(),
                 )
             else:
-                current_question = get_user_question(redis_client, user_id, PLATFORM)
-                if not current_question or current_question not in questions:
-                    vk.messages.send(
-                        user_id=user_id,
-                        random_id=vk_api.utils.get_random_id(),
-                        message="Пожалуйста, сначала возьмите вопрос — нажмите «Новый вопрос».",
-                        keyboard=keyboard.get_keyboard(),
-                    )
-                else:
-                    user_answer = text.lower()
-                    correct_answer = questions[current_question]
-                    main_correct_answer = clean_answer(correct_answer)
-                    if user_answer == main_correct_answer:
-                        increase_user_score(redis_client, user_id, PLATFORM)
-                        vk.messages.send(
-                            user_id=user_id,
-                            random_id=vk_api.utils.get_random_id(),
-                            message="Правильно! Поздравляю! Для следующего вопроса нажми «Новый вопрос»",
-                            keyboard=keyboard.get_keyboard(),
-                        )
-                    else:
-                        vk.messages.send(
-                            user_id=user_id,
-                            random_id=vk_api.utils.get_random_id(),
-                            message="Неправильно… Попробуешь ещё раз?",
-                            keyboard=keyboard.get_keyboard(),
-                        )
+                vk.messages.send(
+                    user_id=user_id,
+                    random_id=vk_api.utils.get_random_id(),
+                    message="Вы ещё не взяли ни одного вопроса.",
+                    keyboard=keyboard.get_keyboard(),
+                )
+            question = random.choice(list(questions.keys()))
+            save_user_question(redis_client, user_id, question, PLATFORM)
+            vk.messages.send(
+                user_id=user_id,
+                random_id=vk_api.utils.get_random_id(),
+                message=question,
+                keyboard=keyboard.get_keyboard(),
+            )
+            print(f"Пользователь {user_id} сдался, задан новый вопрос")
+            continue
+
+        if text == "Мой счёт":
+            score = get_user_score(redis_client, user_id, PLATFORM)
+            vk.messages.send(
+                user_id=user_id,
+                random_id=vk_api.utils.get_random_id(),
+                message=f"Ваш счёт: {score}",
+                keyboard=keyboard.get_keyboard(),
+            )
+            continue
+
+        current_question = get_user_question(redis_client, user_id, PLATFORM)
+        if not current_question or current_question not in questions:
+            vk.messages.send(
+                user_id=user_id,
+                random_id=vk_api.utils.get_random_id(),
+                message="Пожалуйста, сначала возьмите вопрос — нажмите «Новый вопрос».",
+                keyboard=keyboard.get_keyboard(),
+            )
+            continue
+
+        user_answer = text.lower()
+        correct_answer = questions[current_question]
+        main_correct_answer = clean_answer(correct_answer)
+        if user_answer == main_correct_answer:
+            increase_user_score(redis_client, user_id, PLATFORM)
+            vk.messages.send(
+                user_id=user_id,
+                random_id=vk_api.utils.get_random_id(),
+                message="Правильно! Поздравляю! Для следующего вопроса нажми «Новый вопрос»",
+                keyboard=keyboard.get_keyboard(),
+            )
+        else:
+            vk.messages.send(
+                user_id=user_id,
+                random_id=vk_api.utils.get_random_id(),
+                message="Неправильно… Попробуешь ещё раз?",
+                keyboard=keyboard.get_keyboard(),
+            )
 
 
 if __name__ == "__main__":
