@@ -44,9 +44,7 @@ dump.rdb
 *.envrc
 
 # Project data (if not needed in repo)
-data/*.json
-data/*.txt
-data/*.zip
+data/
 
 # For Mac/Linux backup files
 *~
