@@ -1,4 +1,3 @@
-import json
 import logging
 import os
 import random
@@ -15,8 +14,18 @@ PLATFORM = "vk"
 
 
 def load_questions(questions_path):
-    with open(questions_path, encoding="utf-8") as f:
-        return json.load(f)
+    questions = {}
+    with open(questions_path, encoding="utf-8") as file:
+        question = None
+        for line in file:
+            line = line.strip()
+            if line.startswith("Вопрос"):
+                question = line.split(":", 1)[1].strip()
+            elif line.startswith("Ответ") and question:
+                answer = line.split(":", 1)[1].strip()
+                questions[question] = answer
+                question = None
+    return questions
 
 
 def build_keyboard():
@@ -41,7 +50,7 @@ def main():
     vk_group_id = int(os.environ["VK_GROUP_ID"])
     questions_path = os.environ.get(
         "QUESTIONS_PATH",
-        os.path.join(os.path.dirname(__file__), "..", "data", "120br_dict.json"),
+        os.path.join(os.path.dirname(__file__), "..", "data", "120br.txt"),
     )
     redis_host = os.environ["REDIS_HOST"]
     redis_port = int(os.environ["REDIS_PORT"])
