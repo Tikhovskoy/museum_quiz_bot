@@ -52,7 +52,7 @@ def main():
     longpoll = VkBotLongPoll(vk_session, vk_group_id)
     keyboard = build_keyboard()
 
-    questions_dict = load_questions(questions_path)
+    questions = load_questions(questions_path)
     logger.info("VK Quiz Bot started!")
     print("Longpoll started, waiting for events...")
 
@@ -63,7 +63,7 @@ def main():
             text = event.message.text.strip()
 
             if text == "Новый вопрос":
-                question = random.choice(list(questions_dict.keys()))
+                question = random.choice(list(questions.keys()))
                 save_user_question(user_id, question, PLATFORM)
                 vk.messages.send(
                     user_id=user_id,
@@ -74,8 +74,8 @@ def main():
                 print(f"Задан новый вопрос пользователю {user_id}")
             elif text == "Сдаться":
                 current_question = get_user_question(user_id, PLATFORM)
-                if current_question and current_question in questions_dict:
-                    answer = questions_dict[current_question]
+                if current_question and current_question in questions:
+                    answer = questions[current_question]
                     vk.messages.send(
                         user_id=user_id,
                         random_id=vk_api.utils.get_random_id(),
@@ -89,7 +89,7 @@ def main():
                         message="Вы ещё не взяли ни одного вопроса.",
                         keyboard=keyboard.get_keyboard(),
                     )
-                question = random.choice(list(questions_dict.keys()))
+                question = random.choice(list(questions.keys()))
                 save_user_question(user_id, question, PLATFORM)
                 vk.messages.send(
                     user_id=user_id,
@@ -108,7 +108,7 @@ def main():
                 )
             else:
                 current_question = get_user_question(user_id, PLATFORM)
-                if not current_question or current_question not in questions_dict:
+                if not current_question or current_question not in questions:
                     vk.messages.send(
                         user_id=user_id,
                         random_id=vk_api.utils.get_random_id(),
@@ -117,7 +117,7 @@ def main():
                     )
                 else:
                     user_answer = text.lower()
-                    correct_answer = questions_dict[current_question]
+                    correct_answer = questions[current_question]
                     main_correct_answer = clean_answer(correct_answer)
                     if user_answer == main_correct_answer:
                         increase_user_score(user_id, PLATFORM)

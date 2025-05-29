@@ -3,11 +3,11 @@ import json
 import os
 
 
-def build_questions_dict(filepath):
+def build_questions(filepath):
     with open(filepath, encoding="koi8-r") as file:
         lines = file.readlines()
 
-    questions_dict = {}
+    questions = {}
     question_text = ""
     answer_text = ""
     mode = None
@@ -39,10 +39,10 @@ def build_questions_dict(filepath):
             if not answer_text and line.strip():
                 answer_text = line.strip()
                 if question_text and answer_text:
-                    questions_dict[question_text.strip()] = answer_text.strip()
+                    questions[question_text.strip()] = answer_text.strip()
                 mode = None
 
-    return questions_dict
+    return questions
 
 
 def main():
@@ -62,18 +62,18 @@ def main():
         print(f"Файл {filepath} не найден.")
         return
 
-    questions_dict = build_questions_dict(filepath)
+    questions = build_questions(filepath)
 
-    for i, (q, a) in enumerate(questions_dict.items()):
+    for i, (q, a) in enumerate(questions.items()):
         print(f"Вопрос: {q}\nОтвет: {a}\n{'-'*40}")
         if i == 2:
             break
 
-    print(f"Всего вопросов: {len(questions_dict)}")
+    print(f"Всего вопросов: {len(questions)}")
 
     output_path = filepath.replace(".txt", "_dict.json")
     with open(output_path, "w", encoding="utf-8") as out:
-        json.dump(questions_dict, out, ensure_ascii=False, indent=2)
+        json.dump(questions, out, ensure_ascii=False, indent=2)
 
     print(f"Вопросы сохранены в {output_path}")
 

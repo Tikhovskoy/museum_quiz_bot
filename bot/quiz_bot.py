@@ -25,7 +25,7 @@ def load_questions(questions_path):
         return json.load(f)
 
 
-questions_dict = None
+questions = None
 
 
 def start(update: Update, context: CallbackContext):
@@ -39,8 +39,8 @@ def start(update: Update, context: CallbackContext):
 
 
 def handle_new_question_request(update: Update, context: CallbackContext):
-    global questions_dict
-    question = random.choice(list(questions_dict.keys()))
+    global questions
+    question = random.choice(list(questions.keys()))
     user_id = update.effective_user.id
     save_user_question(user_id, question, PLATFORM)
     update.message.reply_text(question)
@@ -58,13 +58,13 @@ def handle_solution_attempt(update: Update, context: CallbackContext):
     user_id = update.effective_user.id
     user_answer = update.message.text.strip().lower()
     current_question = get_user_question(user_id, PLATFORM)
-    if not current_question or current_question not in questions_dict:
+    if not current_question or current_question not in questions:
         update.message.reply_text(
             "Пожалуйста, сначала возьмите вопрос — нажмите «Новый вопрос»."
         )
         return States.QUESTION
 
-    correct_answer = questions_dict[current_question]
+    correct_answer = questions[current_question]
     main_correct_answer = clean_answer(correct_answer)
 
     if user_answer == main_correct_answer:
@@ -81,12 +81,12 @@ def handle_solution_attempt(update: Update, context: CallbackContext):
 def handle_give_up(update: Update, context: CallbackContext):
     user_id = update.effective_user.id
     current_question = get_user_question(user_id, PLATFORM)
-    if current_question and current_question in questions_dict:
-        answer = questions_dict[current_question]
+    if current_question and current_question in questions:
+        answer = questions[current_question]
         update.message.reply_text(f"Правильный ответ:\n{answer}")
     else:
         update.message.reply_text("Вы ещё не взяли ни одного вопроса.")
-    question = random.choice(list(questions_dict.keys()))
+    question = random.choice(list(questions.keys()))
     save_user_question(user_id, question, PLATFORM)
     update.message.reply_text(question)
     return States.ANSWER
@@ -115,8 +115,8 @@ def main():
         os.path.join(os.path.dirname(__file__), "..", "data", "120br_dict.json"),
     )
 
-    global questions_dict
-    questions_dict = load_questions(questions_path)
+    global questions
+    questions = load_questions(questions_path)
 
     logging.basicConfig(
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
