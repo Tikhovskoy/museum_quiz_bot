@@ -111,7 +111,7 @@ def fallback(update: Update, context: CallbackContext):
 
 def main():
     load_dotenv()
-    TELEGRAM_TOKEN = os.environ["TELEGRAM_TOKEN"]
+    telegram_token = os.environ["TELEGRAM_TOKEN"]
     questions_path = os.environ.get(
         "QUESTIONS_PATH",
         os.path.join(os.path.dirname(__file__), "..", "data", "120br_dict.json"),
@@ -128,7 +128,7 @@ def main():
         level=logging.INFO,
     )
 
-    updater = Updater(TELEGRAM_TOKEN, use_context=True)
+    updater = Updater(telegram_token, use_context=True)
     dp = updater.dispatcher
 
     dp.bot_data["questions"] = questions
