@@ -29,8 +29,7 @@
 │   └── redis_tools.py
 ├── data
 │   └── 120br_dict.json
-├── parse_questions.py
-├── questions_dict.py
+├── build_questions.py
 ├── requirements.txt
 ├── .gitignore
 └── README.md
@@ -46,11 +45,8 @@
 - **data/**  
   Обработанные JSON-файлы (используются ботами).
 
-- **parse_questions.py**  
-  CLI-скрипт для парсинга txt-файлов с вопросами, преобразует в удобную структуру.
-
-- **questions_dict.py**  
-  CLI-скрипт для генерации словаря (dict/json) вида "вопрос: ответ" для ботов.
+- **build_questions.py**  
+  CLI-скрипт для преобразования текстового файла с вопросами викторины в JSON-словарь формата "вопрос": "ответ".
 
 - **requirements.txt**  
   Список зависимостей Python-пакетов.
