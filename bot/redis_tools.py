@@ -1,13 +1,11 @@
-import os
-
 import redis
 
 
-def get_redis_client():
+def get_redis_client(host, port, password):
     return redis.Redis(
-        host=os.environ["REDIS_HOST"],
-        port=int(os.environ["REDIS_PORT"]),
-        password=os.environ["REDIS_PASSWORD"],
+        host=host,
+        port=port,
+        password=password,
         decode_responses=True,
     )
 

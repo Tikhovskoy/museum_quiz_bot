@@ -116,9 +116,12 @@ def main():
         "QUESTIONS_PATH",
         os.path.join(os.path.dirname(__file__), "..", "data", "120br_dict.json"),
     )
+    redis_host = os.environ["REDIS_HOST"]
+    redis_port = int(os.environ["REDIS_PORT"])
+    redis_password = os.environ["REDIS_PASSWORD"]
 
     questions = load_questions(questions_path)
-    redis_client = get_redis_client()
+    redis_client = get_redis_client(redis_host, redis_port, redis_password)
 
     logging.basicConfig(
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",

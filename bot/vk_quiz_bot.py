@@ -6,7 +6,7 @@ import re
 
 import vk_api
 from dotenv import load_dotenv
-from redis_tools import (get_user_question, get_user_score,
+from redis_tools import (get_redis_client, get_user_question, get_user_score,
                          increase_user_score, save_user_question)
 from vk_api.bot_longpoll import VkBotEventType, VkBotLongPoll
 from vk_api.keyboard import VkKeyboard, VkKeyboardColor
@@ -43,6 +43,9 @@ def main():
         "QUESTIONS_PATH",
         os.path.join(os.path.dirname(__file__), "..", "data", "120br_dict.json"),
     )
+    redis_host = os.environ["REDIS_HOST"]
+    redis_port = int(os.environ["REDIS_PORT"])
+    redis_password = os.environ["REDIS_PASSWORD"]
 
     logging.basicConfig(level=logging.INFO)
     logger = logging.getLogger("vk_quiz_bot")
@@ -53,6 +56,7 @@ def main():
     keyboard = build_keyboard()
 
     questions = load_questions(questions_path)
+    redis_client = get_redis_client(redis_host, redis_port, redis_password)
     logger.info("VK Quiz Bot started!")
     print("Longpoll started, waiting for events...")
 
@@ -64,7 +68,7 @@ def main():
 
             if text == "Новый вопрос":
                 question = random.choice(list(questions.keys()))
-                save_user_question(user_id, question, PLATFORM)
+                save_user_question(redis_client, user_id, question, PLATFORM)
                 vk.messages.send(
                     user_id=user_id,
                     random_id=vk_api.utils.get_random_id(),
@@ -73,7 +77,7 @@ def main():
                 )
                 print(f"Задан новый вопрос пользователю {user_id}")
             elif text == "Сдаться":
-                current_question = get_user_question(user_id, PLATFORM)
+                current_question = get_user_question(redis_client, user_id, PLATFORM)
                 if current_question and current_question in questions:
                     answer = questions[current_question]
                     vk.messages.send(
@@ -90,7 +94,7 @@ def main():
                         keyboard=keyboard.get_keyboard(),
                     )
                 question = random.choice(list(questions.keys()))
-                save_user_question(user_id, question, PLATFORM)
+                save_user_question(redis_client, user_id, question, PLATFORM)
                 vk.messages.send(
                     user_id=user_id,
                     random_id=vk_api.utils.get_random_id(),
@@ -99,7 +103,7 @@ def main():
                 )
                 print(f"Пользователь {user_id} сдался, задан новый вопрос")
             elif text == "Мой счёт":
-                score = get_user_score(user_id, PLATFORM)
+                score = get_user_score(redis_client, user_id, PLATFORM)
                 vk.messages.send(
                     user_id=user_id,
                     random_id=vk_api.utils.get_random_id(),
@@ -107,7 +111,7 @@ def main():
                     keyboard=keyboard.get_keyboard(),
                 )
             else:
-                current_question = get_user_question(user_id, PLATFORM)
+                current_question = get_user_question(redis_client, user_id, PLATFORM)
                 if not current_question or current_question not in questions:
                     vk.messages.send(
                         user_id=user_id,
@@ -120,7 +124,7 @@ def main():
                     correct_answer = questions[current_question]
                     main_correct_answer = clean_answer(correct_answer)
                     if user_answer == main_correct_answer:
-                        increase_user_score(user_id, PLATFORM)
+                        increase_user_score(redis_client, user_id, PLATFORM)
                         vk.messages.send(
                             user_id=user_id,
                             random_id=vk_api.utils.get_random_id(),
