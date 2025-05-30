@@ -5,27 +5,13 @@ import re
 
 import vk_api
 from dotenv import load_dotenv
+from question_file_tools import load_questions
 from redis_tools import (get_redis_client, get_user_question, get_user_score,
                          increase_user_score, save_user_question)
 from vk_api.bot_longpoll import VkBotEventType, VkBotLongPoll
 from vk_api.keyboard import VkKeyboard, VkKeyboardColor
 
 PLATFORM = "vk"
-
-
-def load_questions(questions_path):
-    questions = {}
-    with open(questions_path, encoding="utf-8") as file:
-        question = None
-        for line in file:
-            line = line.strip()
-            if line.startswith("Вопрос"):
-                question = line.split(":", 1)[1].strip()
-            elif line.startswith("Ответ") and question:
-                answer = line.split(":", 1)[1].strip()
-                questions[question] = answer
-                question = None
-    return questions
 
 
 def build_keyboard():
