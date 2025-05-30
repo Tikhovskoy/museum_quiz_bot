@@ -1,13 +1,44 @@
-def load_questions(questions_path):
+import chardet
+
+IGNORED_PREFIXES = ("Комментарий", "Источник", "Автор")
+
+
+def detect_encoding(file_path, sample_size=1000):
+    with open(file_path, "rb") as f:
+        return chardet.detect(f.read(sample_size)).get("encoding", "utf-8")
+
+
+def parse_questions(lines):
     questions = {}
-    with open(questions_path, encoding="utf-8") as file:
-        question = None
-        for line in file:
-            line = line.strip()
-            if line.startswith("Вопрос"):
-                question = line.split(":", 1)[1].strip()
-            elif line.startswith("Ответ") and question:
-                answer = line.split(":", 1)[1].strip()
+    buffer = []
+    collecting = None
+
+    for line in map(str.strip, lines):
+        if line.startswith("Вопрос"):
+            buffer.clear()
+            collecting = "question"
+            continue
+        if line.startswith("Ответ"):
+            collecting = "answer"
+            continue
+        if line.startswith(IGNORED_PREFIXES):
+            collecting = None
+            continue
+
+        if collecting == "question":
+            buffer.append(line)
+        elif collecting == "answer":
+            question = " ".join(buffer).strip()
+            answer = line.strip()
+            if question and answer:
                 questions[question] = answer
-                question = None
+            buffer.clear()
+            collecting = None
+
     return questions
+
+
+def load_questions(questions_path):
+    encoding = detect_encoding(questions_path)
+    with open(questions_path, encoding=encoding) as file:
+        return parse_questions(file)
